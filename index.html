@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Latihan Mandarin Mobile</title>
+    <style>
+        /* CSS Sama seperti sebelumnya, tetap gunakan style Anda */
+        body { font-family: sans-serif; padding: 20px; background: #f8fafc; }
+        .btn-record { padding: 20px; background: #4f46e5; color: white; border: none; border-radius: 10px; width: 100%; font-size: 16px; }
+        .btn-recording { background: #ef4444; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <button id="main-btn" class="btn-record" onclick="toggleRecording()">🎙️ Mulai Rekam</button>
+    <div id="status">Status: Siap</div>
+</div>
+
+<script>
+    let recognition;
+    let isListening = false;
+
+    // Inisialisasi API dengan pengecekan browser
+    function initRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            alert("Browser Anda tidak mendukung fitur suara.");
+            return null;
+        }
+
+        const rec = new SpeechRecognition();
+        rec.lang = 'zh-TW';
+        rec.continuous = false; // Lebih stabil untuk mobile
+        rec.interimResults = false;
+
+        rec.onstart = () => {
+            isListening = true;
+            document.getElementById('main-btn').innerText = "🛑 Berhenti & Cek";
+            document.getElementById('main-btn').classList.add('btn-recording');
+            document.getElementById('status').innerText = "Status: Mendengarkan...";
+        };
+
+        rec.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            console.log("Hasil: ", transcript);
+            alert("Anda mengucapkan: " + transcript);
+        };
+
+        rec.onerror = (event) => {
+            console.error("Error:", event.error);
+            if (event.error === 'not-allowed') {
+                alert("Izin mikrofon ditolak! Buka pengaturan browser Anda dan izinkan mikrofon untuk situs ini.");
+            }
+            stopRecording();
+        };
+
+        rec.onend = () => {
+            stopRecording();
+        };
+
+        return rec;
+    }
+
+    function toggleRecording() {
+        if (!recognition) recognition = initRecognition();
+        
+        if (isListening) {
+            recognition.stop();
+        } else {
+            try {
+                recognition.start();
+            } catch (e) {
+                console.log("Start error:", e);
+                // Jika error, reset engine
+                recognition = null;
+            }
+        }
+    }
+
+    function stopRecording() {
+        isListening = false;
+        document.getElementById('main-btn').innerText = "🎙️ Mulai Rekam";
+        document.getElementById('main-btn').classList.remove('btn-recording');
+        document.getElementById('status').innerText = "Status: Siap";
+    }
+</script>
+</body>
+</html>
